@@ -1,0 +1,27 @@
+{
+  "name": "ray-marshmallow",
+  "version": "1.0.0",
+  "description": "Setups to make ray marching scenes w/ canvas-sketch",
+  "main": "sketch.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marioecg/ray-marshmallow.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/marioecg/ray-marshmallow/issues"
+  },
+  "homepage": "https://github.com/marioecg/ray-marshmallow#readme",
+  "dependencies": {
+    "canvas-sketch": "^0.7.4",
+    "canvas-sketch-util": "^1.10.0",
+    "glsl-map": "^1.0.1",
+    "glsl-noise": "^0.0.0",
+    "glsl-rotate": "^1.1.0"
+  }
+}
