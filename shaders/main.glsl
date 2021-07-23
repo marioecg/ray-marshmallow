@@ -10,6 +10,8 @@ precision highp float;
 uniform float uTime;
 uniform vec2 uResolution;
 uniform vec2 uMouse;
+uniform samplerCube tCubemap;
+uniform sampler2D tTest;
 
 varying vec2 vUv;
 

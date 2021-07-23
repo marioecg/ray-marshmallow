@@ -1,6 +1,8 @@
 const canvasSketch = require('canvas-sketch');
 const createShader = require('canvas-sketch-util/shader');
 const frag = require('./shaders/main.glsl');
+const loadAsset = require('load-asset');
+const createRegl = require('regl');
 
 /**
  * Settings
@@ -21,7 +23,7 @@ let mouseIsDown = false;
 /**
  * Main sketch function
  */
-const sketch = ({ gl, canvas, width, height }) => {
+const sketch = async ({ gl, canvas, width, height }) => {
   /**
    * Update mouse only when mouse is down
    */
@@ -38,6 +40,22 @@ const sketch = ({ gl, canvas, width, height }) => {
     mouse.y = clientY;
   }
 
+  /**
+   * Load cubemap textures
+   */
+
+  const px = await loadAsset('/assets/px.png');
+  const nx = await loadAsset('/assets/nx.png');
+  const py = await loadAsset('/assets/py.png');
+  const ny = await loadAsset('/assets/ny.png');
+  const pz = await loadAsset('/assets/pz.png');
+  const nz = await loadAsset('/assets/nz.png');
+
+  // Setup REGL with canvas context
+  const regl = createRegl({ gl });
+
+  const cubemap = regl.cube(px, nx, py, ny, pz, nz);
+
   return createShader({
     gl,
     frag,
@@ -45,6 +63,7 @@ const sketch = ({ gl, canvas, width, height }) => {
       uTime: ({ time }) => time,
       uResolution: () => [width, height],
       uMouse: () => [mouse.x, mouse.y],
+      tCubemap: cubemap,
     }
   });
 };

@@ -20,8 +20,11 @@
   "dependencies": {
     "canvas-sketch": "^0.7.4",
     "canvas-sketch-util": "^1.10.0",
+    "gl-texture-cube": "^1.0.1",
     "glsl-map": "^1.0.1",
     "glsl-noise": "^0.0.0",
-    "glsl-rotate": "^1.1.0"
+    "glsl-rotate": "^1.1.0",
+    "load-asset": "^1.2.0",
+    "regl": "^1.7.0"
   }
 }
