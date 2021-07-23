@@ -20,13 +20,14 @@ mat2 rotation2d(float a) {
 }
 
 float sdBox(vec3 p, vec3 s) {
+  // p.xy *= rotation2d(uTime * 0.3);
   p = abs(p) - s;
   
   return length(max(p, 0.)) + min(max(p.x, max(p.y, p.z)), 0.0);
 }
 
 float getDist(vec3 p) {
-  float d = sdBox(p, vec3(1));
+  float d = sdBox(p, vec3(2));
     
   return d;
 }
@@ -46,7 +47,7 @@ float raymarch(vec3 ro, vec3 rd, float side) {
 
 vec3 getNormal(vec3 p) {
   float d = getDist(p);
-  vec2 e = vec2(0.001, 0.000);
+  vec2 e = vec2(0.1, 0.000);
   
   vec3 n = d - vec3(
     getDist(p - e.xyy),
@@ -72,7 +73,9 @@ void main() {
   vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution.xy) / uResolution.y;
   vec2 m = uMouse.xy / uResolution.xy;
 
-  vec3 ro = vec3(0, 3, -4);
+  float roX = cos(uTime * 0.35) * 10.0;
+  float roY = sin(uTime * 0.35) * 10.0;
+  vec3 ro = vec3(roX, roY, 4);
   ro.yz *= rotation2d(-m.y * 3.14 + 1.0);
   ro.xz *= rotation2d(-m.x * 6.2831);
   
@@ -89,6 +92,7 @@ void main() {
     
     vec3 reflectionDir = reflect(rd, n);
     // ray direction when entering the surface
+    vec3 reflOutside = textureCube(tCube, reflectionDir).rgb;
     vec3 rdIn = refract(rd, n, 1.0 / IOR); // when going from a less dense medium to a more dense medium use the inverse of the IOR
 
     // ray march inside of the object
@@ -100,12 +104,33 @@ void main() {
     vec3 pExit = pEnter + rdIn * dIn; // 3D position of exit point
     vec3 nExit = -getNormal(pExit); // Normal of exit and it needs to be flipped
 
-    vec3 rdOut = refract(rdIn, nExit, IOR); // take the inverse since we are going from more dense to a lighter medium
+    vec3 reflTex = vec3(0);
 
+    vec3 rdOut = vec3(0);
+
+    float abb = 0.01;
+
+    // red
+    rdOut = refract(rdIn, nExit, IOR - abb); // take the inverse since we are going from more dense to a lighter medium
     if (dot(rdOut, rdOut) == 0.0) rdOut = reflect(rdIn, nExit);
+    reflTex.r = textureCube(tCube, rdOut).r;
 
-    vec3 reflTex = textureCube(tCube, rdOut).rgb;
-    col = vec3(reflTex);
+    // green
+    rdOut = refract(rdIn, nExit, IOR); // take the inverse since we are going from more dense to a lighter medium
+    if (dot(rdOut, rdOut) == 0.0) rdOut = reflect(rdIn, nExit);
+    reflTex.g = textureCube(tCube, rdOut).g;
+
+    // blue
+    rdOut = refract(rdIn, nExit, IOR + abb); // take the inverse since we are going from more dense to a lighter medium
+    if (dot(rdOut, rdOut) == 0.0) rdOut = reflect(rdIn, nExit);
+    reflTex.b = textureCube(tCube, rdOut).b;
+
+    float dens = 0.1;
+    float optDist = exp(-dIn * dens); // optical density or distance
+
+    float fresnel = pow(1.0 + dot(rd, n), 1.0);
+    
+    col = mix(reflTex, reflOutside, fresnel);
   }
   
   col = pow(col, vec3(0.4545));	// gamma correction
