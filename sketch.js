@@ -1,8 +1,8 @@
 const canvasSketch = require('canvas-sketch');
 const createShader = require('canvas-sketch-util/shader');
-const frag = require('./shaders/main.glsl');
-const loadAsset = require('load-asset');
 const createRegl = require('regl');
+const loadAsset = require('load-asset');
+const frag = require('./shaders/main.glsl');
 
 /**
  * Settings
@@ -10,7 +10,7 @@ const createRegl = require('regl');
 const settings = {
   context: 'webgl',
   animate: true,
-  dimensions: [1000, 1000]
+  dimensions: [1500, 1500]
 };
 
 const mouse = {
@@ -43,18 +43,19 @@ const sketch = async ({ gl, canvas, width, height }) => {
   /**
    * Load cubemap textures
    */
-
-  const px = await loadAsset('/assets/px.png');
-  const nx = await loadAsset('/assets/nx.png');
-  const py = await loadAsset('/assets/py.png');
-  const ny = await loadAsset('/assets/ny.png');
-  const pz = await loadAsset('/assets/pz.png');
-  const nz = await loadAsset('/assets/nz.png');
+   const textures = await Promise.all([    
+    loadAsset('./assets/px.png'),
+    loadAsset('./assets/nx.png'),
+    loadAsset('./assets/py.png'),
+    loadAsset('./assets/ny.png'),
+    loadAsset('./assets/pz.png'),
+    loadAsset('./assets/nz.png')
+  ])
 
   // Setup REGL with canvas context
   const regl = createRegl({ gl });
 
-  const cubemap = regl.cube(px, nx, py, ny, pz, nz);
+  const cubemap = regl.cube(...textures);
 
   return createShader({
     gl,
@@ -63,7 +64,7 @@ const sketch = async ({ gl, canvas, width, height }) => {
       uTime: ({ time }) => time,
       uResolution: () => [width, height],
       uMouse: () => [mouse.x, mouse.y],
-      tCubemap: cubemap,
+      tCube: () => cubemap,
     }
   });
 };

@@ -10,8 +10,7 @@ precision highp float;
 uniform float uTime;
 uniform vec2 uResolution;
 uniform vec2 uMouse;
-uniform samplerCube tCubemap;
-uniform sampler2D tTest;
+uniform samplerCube tCube;
 
 varying vec2 vUv;
 
@@ -79,6 +78,7 @@ void main() {
   
   vec3 rd = getRayDir(uv, ro, vec3(0, 0, 0), 1.0);
   vec3 col = vec3(0);
+  vec3 cube = textureCube(tCube, rd).rgb;
   
   float d = raymarch(ro, rd);
   
@@ -93,5 +93,5 @@ void main() {
   
   col = pow(col, vec3(0.4545));	// gamma correction
   
-  gl_FragColor = vec4(col, 1.0);
+  gl_FragColor = vec4(cube, 1.0);
 }
