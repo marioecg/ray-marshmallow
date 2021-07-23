@@ -70,7 +70,3 @@ const sketch = async ({ gl, canvas, width, height }) => {
 };
 
 canvasSketch(sketch, settings);
-
-/**
- * More events
- */
