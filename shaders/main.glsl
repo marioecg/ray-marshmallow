@@ -31,12 +31,12 @@ float getDist(vec3 p) {
   return d;
 }
 
-float raymarch(vec3 ro, vec3 rd) {
+float raymarch(vec3 ro, vec3 rd, float side) {
   float dO = 0.0;
   
   for (int i = 0; i < MAX_STEPS; i++) {
     vec3 p = ro + rd * dO;
-    float dS = getDist(p);
+    float dS = getDist(p) * side; // we need to invert the sign of the distance when going inside the object
     dO += dS;
     if(dO > MAX_DIST || abs(dS) < SURF_DIST) break;
   }
@@ -77,21 +77,38 @@ void main() {
   ro.xz *= rotation2d(-m.x * 6.2831);
   
   vec3 rd = getRayDir(uv, ro, vec3(0, 0, 0), 1.0);
-  vec3 col = vec3(0);
-  vec3 cube = textureCube(tCube, rd).rgb;
+  vec3 col = textureCube(tCube, rd).rgb;
   
-  float d = raymarch(ro, rd);
+  float d = raymarch(ro, rd, 1.0); // ray march outside of object
+
+  float IOR = 1.45; // index of refraction
   
   if (d < MAX_DIST) {
-    vec3 p = ro + rd * d;
-    vec3 n = getNormal(p);
-    vec3 r = reflect(rd, n);
+    vec3 p = ro + rd * d; // 3D position when we hit
+    vec3 n = getNormal(p); // Normal of surface or orientation
     
-    float dif = dot(n, normalize(vec3(1, 2, 3))) * 0.5 + 0.5;
-    col = vec3(dif);
+    vec3 reflectionDir = reflect(rd, n);
+    // ray direction when entering the surface
+    vec3 rdIn = refract(rd, n, 1.0 / IOR); // when going from a less dense medium to a more dense medium use the inverse of the IOR
+
+    // ray march inside of the object
+    // it has to start where we hit the surface at point P
+    // and go in the direction of the refraction
+    vec3 pEnter = p - n * SURF_DIST * 3.0; // we need to move P down a little bit because we're marching into the object
+    float dIn = raymarch(pEnter, rdIn, -1.0); 
+
+    vec3 pExit = pEnter + rdIn * dIn; // 3D position of exit point
+    vec3 nExit = -getNormal(pExit); // Normal of exit and it needs to be flipped
+
+    vec3 rdOut = refract(rdIn, nExit, IOR); // take the inverse since we are going from more dense to a lighter medium
+
+    if (dot(rdOut, rdOut) == 0.0) rdOut = reflect(rdIn, nExit);
+
+    vec3 reflTex = textureCube(tCube, rdOut).rgb;
+    col = vec3(reflTex);
   }
   
   col = pow(col, vec3(0.4545));	// gamma correction
   
-  gl_FragColor = vec4(cube, 1.0);
+  gl_FragColor = vec4(col, 1.0);
 }
