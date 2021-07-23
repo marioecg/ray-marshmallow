@@ -24,9 +24,7 @@ let mouseIsDown = false;
  * Main sketch function
  */
 const sketch = async ({ gl, canvas, width, height }) => {
-  /**
-   * Update mouse only when mouse is down
-   */
+  // Update mouse only when it's down
   canvas.onmousedown = () => mouseIsDown = true;
 
   canvas.onmouseup = () => mouseIsDown = false;
@@ -40,10 +38,8 @@ const sketch = async ({ gl, canvas, width, height }) => {
     mouse.y = clientY;
   }
 
-  /**
-   * Load cubemap textures
-   */
-   const textures = await Promise.all([    
+  // Load cubemap textures
+  const textures = await Promise.all([    
     loadAsset('./assets/px.png'),
     loadAsset('./assets/nx.png'),
     loadAsset('./assets/py.png'),
@@ -55,8 +51,10 @@ const sketch = async ({ gl, canvas, width, height }) => {
   // Setup REGL with canvas context
   const regl = createRegl({ gl });
 
+  // Create cubemap
   const cubemap = regl.cube(...textures);
-
+  
+  // Shader object
   return createShader({
     gl,
     frag,
