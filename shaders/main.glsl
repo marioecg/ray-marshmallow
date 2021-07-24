@@ -22,6 +22,14 @@ varying vec2 vUv;
 #pragma glslify: rotation2d = require(glsl-rotate/rotation-2d)
 #pragma glslify: map = require(glsl-map)
 
+float opRep(in vec3 p, in vec3 c) {
+  vec3 q = mod(p + 0.5 * c, c) - 0.5 * c;
+
+  float oct = octahedron(q, 1.0);
+
+  return oct;
+}
+
 float getDist(vec3 p) {
   float bx = box(p, vec3(5, 5, 0.5));
 
