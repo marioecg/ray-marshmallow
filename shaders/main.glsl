@@ -6,6 +6,8 @@ precision highp float;
 #define MAX_STEPS 100
 #define MAX_DIST 100.0
 #define SURF_DIST 0.001
+#define PI 3.1415926535897932384626433832795
+#define TWO_PI 6.2831853071795864769252867665590
 
 uniform float uTime;
 uniform vec2 uResolution;
@@ -14,22 +16,20 @@ uniform samplerCube tCube;
 
 varying vec2 vUv;
 
-mat2 rotation2d(float a) {
-  float s = sin(a), c = cos(a);
-  return mat2(c, -s, s, c);
-}
-
-float sdBox(vec3 p, vec3 s) {
-  // p.xy *= rotation2d(uTime * 0.3);
-  p = abs(p) - s;
-  
-  return length(max(p, 0.)) + min(max(p.x, max(p.y, p.z)), 0.0);
-}
+#pragma glslify: box = require(./sdf/box.glsl)
+#pragma glslify: sphere = require(./sdf/sphere.glsl)
+#pragma glslify: octahedron = require(./sdf/octahedron.glsl)
+#pragma glslify: rotation2d = require(glsl-rotate/rotation-2d)
+#pragma glslify: map = require(glsl-map)
 
 float getDist(vec3 p) {
-  float d = sdBox(p, vec3(2));
+  float bx = box(p, vec3(5, 5, 0.5));
+
+  p.xz *= rotation2d(uTime);;
+  float size = map(cos(uTime * 2.0), -1.0, 1.0, 5.0, 6.5);
+  float oct = octahedron(p, size);
     
-  return d;
+  return oct;
 }
 
 float raymarch(vec3 ro, vec3 rd, float side) {
@@ -73,13 +73,15 @@ void main() {
   vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution.xy) / uResolution.y;
   vec2 m = uMouse.xy / uResolution.xy;
 
-  float roX = cos(uTime * 0.35) * 10.0;
-  float roY = sin(uTime * 0.35) * 10.0;
-  vec3 ro = vec3(roX, roY, 4);
+  float roX = cos(uTime) * 10.0;
+  float roY = sin(uTime) * 10.0;
+  vec3 ro = vec3(10.0, 6.0, 1.0);
   ro.yz *= rotation2d(-m.y * 3.14 + 1.0);
   ro.xz *= rotation2d(-m.x * 6.2831);
-  
-  vec3 rd = getRayDir(uv, ro, vec3(0, 0, 0), 1.0);
+
+  ro.xz *= rotation2d(uTime);
+  // uv *= rotation2d(uTime);
+  vec3 rd = getRayDir(uv, ro, vec3(0, 0, 0), 0.5);
   vec3 col = textureCube(tCube, rd).rgb;
   
   float d = raymarch(ro, rd, 1.0); // ray march outside of object
@@ -125,10 +127,12 @@ void main() {
     if (dot(rdOut, rdOut) == 0.0) rdOut = reflect(rdIn, nExit);
     reflTex.b = textureCube(tCube, rdOut).b;
 
-    float dens = 0.1;
+    float dens = 0.05;
     float optDist = exp(-dIn * dens); // optical density or distance
 
-    float fresnel = pow(1.0 + dot(rd, n), 1.0);
+    reflTex *= optDist;
+
+    float fresnel = pow(1.0 + dot(rd, n), 5.0);
     
     col = mix(reflTex, reflOutside, fresnel);
   }

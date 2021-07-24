@@ -10,7 +10,9 @@ const frag = require('./shaders/main.glsl');
 const settings = {
   context: 'webgl',
   animate: true,
-  dimensions: [1500, 1500]
+  dimensions: [1500, 1500],
+  duration: 20,
+  fps: 60,
 };
 
 const mouse = {
@@ -40,12 +42,12 @@ const sketch = async ({ gl, canvas, width, height }) => {
 
   // Load cubemap textures
   const textures = await Promise.all([    
-    loadAsset('./assets/px.png'),
-    loadAsset('./assets/nx.png'),
-    loadAsset('./assets/py.png'),
-    loadAsset('./assets/ny.png'),
-    loadAsset('./assets/pz.png'),
-    loadAsset('./assets/nz.png')
+    loadAsset('./assets/02/px.png'),
+    loadAsset('./assets/02/nx.png'),
+    loadAsset('./assets/02/py.png'),
+    loadAsset('./assets/02/ny.png'),
+    loadAsset('./assets/02/pz.png'),
+    loadAsset('./assets/02/nz.png')
   ])
 
   // Setup REGL with canvas context
@@ -59,7 +61,7 @@ const sketch = async ({ gl, canvas, width, height }) => {
     gl,
     frag,
     uniforms: {
-      uTime: ({ time }) => time,
+      uTime: ({ time, playhead }) => playhead * Math.PI * 2.0,
       uResolution: () => [width, height],
       uMouse: () => [mouse.x, mouse.y],
       tCube: () => cubemap,
